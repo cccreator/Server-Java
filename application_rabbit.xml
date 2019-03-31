@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-4.0.xsd
+
+
+		http://www.springframework.org/schema/rabbit
+		http://www.springframework.org/schema/rabbit/spring-rabbit.xsd">
+
+
+    <!-- 加载配置属性文件 -->
+    <context:property-placeholder location="classpath:/conf/rabbitConfig.properties" ignore-unresolvable="true"/>
+
+    <!-- 定义rabbitmq的连接工厂 -->
+   <rabbit:connection-factory id="connectionFactory"
+                               host="${mq.host}" port="${mq.port}" username="${mq.username}"
+                               password="${mq.password}"
+                               virtual-host="/"/>
+    <!-- MQ的管理，包括队列、交换机、声明等 -->
+    <rabbit:admin connection-factory="connectionFactory"/>
+
+
+    <bean id="messageConverter"
+          class="org.springframework.amqp.support.converter.SimpleMessageConverter"/>
+
+    <!-- queue -->
+    <!-- GPS -->
+    <rabbit:queue name="${mq.queue.name.gps}" auto-declare="${mq.queue.declare}"
+                  durable="${mq.queue.durable}"
+                  auto-delete="${mq.queue.auto_delete}"/>
+
+    <!-- ArrLev -->
+    <rabbit:queue name="${mq.queue.name.arrlev}" auto-declare="${mq.queue.declare}"
+                  durable="${mq.queue.durable}"
+                  auto-delete="${mq.queue.auto_delete}"/>
+
+    <rabbit:queue name="${mq.queue.name.routerealspeed}" auto-declare="${mq.queue.declare}"
+                  durable="${mq.queue.durable}"
+                  auto-delete="${mq.queue.auto_delete}"/>
+
+    <!-- 定义交换机，自动声明 -->
+    <rabbit:fanout-exchange name="${mq.exchange.name.gps}"
+                            auto-declare="${mq.exchange.declare}" durable="${mq.exchange.durable}">
+        <rabbit:bindings>
+            <rabbit:binding queue="${mq.queue.name.gps}"/>
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+
+    <rabbit:fanout-exchange name="${mq.exchange.name.arrlev}"
+                            auto-declare="${mq.exchange.declare}" durable="${mq.exchange.durable}">
+        <rabbit:bindings>
+            <rabbit:binding queue="${mq.queue.name.arrlev}"/>
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+    <rabbit:fanout-exchange name="${mq.exchange.name.routerealspeed}"
+                            auto-declare="${mq.exchange.declare}" durable="${mq.exchange.durable}">
+        <rabbit:bindings>
+            <rabbit:binding queue="${mq.queue.name.routerealspeed}"/>
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+
+    <rabbit:listener-container acknowledge="auto"
+                               connection-factory="connectionFactory">
+        <rabbit:listener ref="consumerGps" queue-names="${mq.queue.name.gps}"/>
+        <rabbit:listener ref="consumerArrLev" queue-names="${mq.queue.name.arrlev}"/>
+        <rabbit:listener ref="consumerRouteRealSpeed" queue-names="${mq.queue.name.routerealspeed}"/>
+    </rabbit:listener-container>
+
+    <bean name="consumerGps" class="com.*.*.jms.listener.ConsumerGPS"/>
+    <bean name="consumerArrLev" class="com.*.*.jms.listener.ConsumerArrLev"/>
+    <bean name="consumerRouteRealSpeed" class="com.*.*.jms.listener.ConsumerRouteRealSpeed"/>
+</beans>
