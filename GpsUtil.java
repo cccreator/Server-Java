@@ -1,4 +1,4 @@
-package com.hisense.base.common.util;
+package com.*.base.common.util;
 
 import org.springframework.stereotype.Service;
 
