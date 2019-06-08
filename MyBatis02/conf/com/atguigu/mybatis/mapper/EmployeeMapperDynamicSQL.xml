@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.mybatis.mapper.EmployeeMapperDynamicSQL">
+	<!-- public List<Employee> getEmpsByConditionIf(Employee employee); -->
+	<select id="getEmpsByConditionIf" resultType="com.atguigu.mybatis.beans.Employee">
+		select * from tbl_employee  <!-- where  1 = 1  -->
+		<where> <!-- where标签: 解决sql拼装的时候 where  and 的问题. -->
+			<!-- test: OGNL表达式 -->
+			<if test="id!=null">
+				 and id = #{id} 
+			</if>
+			<if test="lastName!=null &amp;&amp; lastName!=&quot;&quot; ">
+				 and last_name like #{lastName} 
+			</if>
+			
+			<if test="email!=null and email.trim()!=''">
+				and email = #{email} 
+			</if>
+			<if test="(&quot;m&quot;).equals(gender) or (&quot;f&quot;).equals(gender) ">
+				and  gender = #{gender}
+			</if>	
+		</where>	
+	</select>
+	
+	
+	<select id="getEmpsByConditionTrim" resultType="com.atguigu.mybatis.beans.Employee">
+		select * from tbl_employee  
+		<!-- 
+			trim:
+				prefix: 前缀  给拼串后的整个字符串加一个前缀.
+				prefixOverrides: 前缀覆盖  给拼串后的整个字符串去掉前面多余的字符
+				suffix: 后缀  给拼串后的整个字符串加一个后缀
+				suffixOverrides: 后缀覆盖 给拼串后的整个字符串去掉后面多余的字符
+		
+		 -->
+		<trim prefix="where" suffixOverrides="and">
+			<!-- test: OGNL表达式 -->
+			<if test="id!=null">
+				 id = #{id} and
+			</if>
+			<if test="lastName!=null &amp;&amp; lastName!=&quot;&quot; ">
+				 last_name like #{lastName} and
+			</if>
+			
+			<if test="email!=null and email.trim()!=''">
+				 email = #{email} and
+			</if>
+			<if test="(&quot;m&quot;).equals(gender) or (&quot;f&quot;).equals(gender) ">
+				 gender = #{gender}
+			</if>	
+		</trim>	
+	</select>
+	
+	<!-- public List<Employee> getEmpsByConditionChoose(Employee employee); -->
+	<!-- 
+		choose: 类似于带了break的 switch case.  将来只会执行其中的一个分支.
+		 		如果带了id就用id查，如果带了lastName就用lastName查。。。。。，只会执行其中首先满足条件的一个分支.
+	 -->
+	<select id="getEmpsByConditionChoose" resultType="com.atguigu.mybatis.beans.Employee">
+		select * from tbl_employee 
+		<where>
+			<choose>
+				<when test="id!=null">
+					id = #{id}
+				</when>				
+				<when test="lastName!=null">
+					last_name = #{lastName}
+				</when>
+				<otherwise>
+					gender ='m'
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+	
+	<!-- public void updateEmp(Employee employee); -->
+	<update id="updateEmp">
+		update tbl_employee   
+		<set>
+			<if test="lastName!=null">
+				last_name = #{lastName},
+			</if>
+			
+			<if test="email!=null">
+				email = #{email},
+			</if>
+			<if test="gender!=null">
+				gender = #{gender}
+			</if>
+		</set>
+		where id = #{id}
+		
+	</update>
+	
+	<!-- public List<Employee> getEmpsByConditionForeach(@Param("ids")List<Integer> ids ); -->
+	
+	<select id="getEmpsByConditionForeach" resultType="com.atguigu.mybatis.beans.Employee">
+		select * from tbl_employee where id  in
+			<!-- foreach:
+					collection: 指定要迭代的集合/Map
+					item: 相当于临时变量  存放当前从集合中迭代出来的对象.
+					open: 指定开始的字符
+					close:指定结束的字符
+					separator:元素与元素之间的分隔符
+					index: 迭代集合的时候，index就是索引.
+					                迭代map的时候，index就是map的key
+					                
+					参数传递: 如果参数是集合Collection(List/Set):
+							List:   list/collection
+							Set:    collection
+						       如果是数组: array
+			 -->
+			<foreach collection="ids" item="curr_id" open="(" close=")" separator="," >
+				#{curr_id}			
+			</foreach>
+		 
+	</select>
+	
+	<!-- foreach进行批量操作 -->
+	<!-- public void addEmps(@Param("emps")List<Employee> emps); -->
+	
+	<!-- <insert id="addEmps" >
+		insert into tbl_employee(last_name,gender,email) values
+		<foreach collection="emps" item="curr_emp" separator=",">
+			(#{curr_emp.lastName},#{curr_emp.gender},#{curr_emp.email})
+		</foreach>
+	</insert> -->
+	
+	<!-- 
+		Mysql默认情况下不允许将多条sql语句通过;隔开拼成一个字符串。
+		需要在链接的url上添加: allowMultiQuries=true.
+	 -->
+	 <insert id="addEmps" >
+	 	<foreach collection="emps" item="curr_emp">
+	 		INSERT INTO tbl_employee (last_name,gender,email) VALUES(#{curr_emp.lastName},#{curr_emp.gender},#{curr_emp.email});
+	 	</foreach>
+	</insert>
+	
+	
+	
+	<!-- 
+		两个内置参数:
+			_parameter: 代表整个参数.
+				单个参数: _parameter就代表这个参数
+			         多个参数: 多给参数会封装map,_parameter就代表这个map.
+			_databaseId:
+				如果配置了databaseIdProvider,_databaseId就代表当前数据库的别名.
+	 -->
+	 
+	 <!-- public Employee getEmpById(Integer id ); -->
+	 <select id="getEmpById" resultType="com.atguigu.mybatis.beans.Employee">
+	 	select * from tbl_employee where id = ${_parameter}
+	 </select>
+	
+	<!-- public List<Employee> getEmpsByCondition(Employee employee); -->
+	<select id="getEmpsByCondition" resultType="com.atguigu.mybatis.beans.Employee">
+		select * from tbl_employee  <!-- where  1 = 1  -->
+		<where> <!-- where标签: 解决sql拼装的时候 where  and 的问题. -->
+			<!-- test: OGNL表达式 -->
+			<if test="id!=null">
+				 and id = #{_parameter.id} 
+			</if>
+			<if test="lastName!=null &amp;&amp; lastName!=&quot;&quot; ">
+				 and last_name like #{_parameter.lastName} 
+			</if>
+			
+			<if test="email!=null and email.trim()!=''">
+				and email = #{_parameter.email} 
+			</if>
+			<if test="(&quot;m&quot;).equals(gender) or (&quot;f&quot;).equals(gender) ">
+				and  gender = #{_parameter.gender}
+			</if>	
+		</where>	
+	</select>
+	
+	<!-- public Employee getEmpById_databaseId(Integer id ); -->
+	
+	<select id="getEmpById_databaseId" resultType="com.atguigu.mybatis.beans.Employee">
+		<if test="_databaseId == 'mysql'">
+			<include refid="selectSql"></include>  tbl_employee  where  id = #{id}
+		</if>
+		<if test="_databaseId =='oracle'">
+			<include refid="selectSql"></include> orcl_employee where id = #{id}
+		</if>
+	</select>
+	
+	
+	<!-- sql:  抽取可重用的sql语句-->
+	
+	<sql id="selectSql">
+		select * from 
+	</sql>
+	
+	
+</mapper>

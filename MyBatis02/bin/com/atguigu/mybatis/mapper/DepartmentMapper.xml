@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.mybatis.mapper.DepartmentMapper">
+	<!-- public Department getDeptById(Integer id ); -->
+	<select id="getDeptById" resultType="com.atguigu.mybatis.beans.Department">
+		select id ,dept_name departmentName from tbl_dept where id = #{id}
+	</select>
+	
+	 <!-- 场景二: 
+	 		查询部门的时候将该部门下所有的员工信息也查询出来
+	 -->
+	 <!-- public Department getDeptAndEmps(Integer id ); -->
+	 <select id="getDeptAndEmps" resultMap="MyDeptAndEmps">
+		 SELECT
+	     d.id did ,d.dept_name ,e.id eid ,e.last_name, e.gender ,e.email
+		 FROM tbl_dept d LEFT JOIN  tbl_employee e 
+	     ON d.id = e.d_id 
+	     WHERE d.id = #{id}	
+	 </select>
+	 <resultMap type="com.atguigu.mybatis.beans.Department" id="MyDeptAndEmps">
+	 	<id column="did" property="id"/>
+	 	<result column="dept_name" property="departmentName"/>
+	 	
+	 	<!-- collection: 映射集合类型的关联属性 -->
+	 	<collection property="emps" ofType="com.atguigu.mybatis.beans.Employee">
+	 		<id column="eid" property="id"/>
+	 		<result column="last_name" property="lastName"/>
+	 		<result column="gender" property="gender"/>
+	 		<result column="email" property="email"/>
+	 	</collection>
+	 	
+	 </resultMap>
+	 
+	 <!-- 
+	 	collection分步查询:
+	 	结果: 查询Department  包含Employees
+	 	过程:
+	 		1.先根据部门id查询部门信息
+	 		2.再根据部门的id查询所有的员工信息
+	 		3.将查询到的员工信息设置到部门中.
+	  -->
+	  
+	  <!-- public Department getDeptAndEmpsStep(Integer id ); -->
+	  <select id="getDeptAndEmpsStep" resultMap="MyDeptAndEmpsStep">
+	  	 select id , dept_name  from tbl_dept where id = #{id}
+	  </select>
+	  <resultMap type="com.atguigu.mybatis.beans.Department" id="MyDeptAndEmpsStep">
+	  	<id column="id" property="id"/>
+	  	<result column="dept_name" property="departmentName"/>
+	  	
+	  	<collection property="emps" ofType="com.atguigu.mybatis.beans.Employee"
+	  		select="com.atguigu.mybatis.mapper.EmployeeMapper.getEmpsByDeptId"
+	  		column="id"
+	  	>
+	  	</collection>
+	  </resultMap>
+	 
+</mapper>

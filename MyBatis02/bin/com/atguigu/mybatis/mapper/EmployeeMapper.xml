@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.mybatis.mapper.EmployeeMapper">
+	<!-- 配置使用二级缓存
+		eviction      缓存的回收策略 默认的回收策略 LRU
+			LRU 最近最少使用 一处最长时间不使用的对象
+			FIFO 先进先出 按对象进入缓存的顺序来移除他们
+		
+		readOnly：设置缓存是否只读 设置为只读后 依旧可以增删改
+			true 只读 myBatis认为所有从缓存中获取数据的操作都是只读操作，不会修改数据
+			     myBatis 为了提升获取速度 直接将数据在缓存中的引用发给用户 
+			             效率快不安全
+	    false 非只读 myBatis 认为获取的数据可能被修改         myBatis会利用序列化及反序列化的技术，                                                                                                                                                                                
+		flushInterval缓存的刷新间隔
+		size 标志缓存能存放多少元素
+		type 用来指定具体的缓存实现类	
+		
+		
+	
+	
+	
+	
+	
+	
+	
+	 -->
+	
+	
+	<!-- public Employee getEmpById(Integer id); -->
+	<select id="getEmpById" resultMap="myEmpResultMap">
+		select * from tbl_employee where id = #{id}
+	</select>
+	<!-- type: 要封装的javaBean的类型 -->
+	<resultMap type="com.atguigu.mybatis.beans.Employee" id="myEmpResultMap">
+		<!-- id:进行主键值的映射  可以帮助底层进行优化 
+			column: 指定列名
+			property: 指定javaBean的属性名
+		-->
+		<id column="id" property="id"/>
+		<!-- result:进行普通列的映射. -->
+		<result column="last_name" property="lastName"/>
+		<result column="gender" property="gender"/>
+		<result column="email" property="email"/>
+	
+	</resultMap>
+	
+	<!-- 场景一:  
+			查询Employee的同时,将该员工对应的部门信息也查询出来.
+			
+			一个员工属于一个部门.
+	 -->
+	 <!-- public Employee getEmpAndDept(Integer id ); -->
+	 <select id="getEmpAndDept" resultMap="MyEmpDept">
+	 	SELECT  e.id eid , e.last_name , e.gender ,e.email ,d.id did  ,d.dept_name
+		FROM tbl_employee e  , tbl_dept d  
+		WHERE e.d_id = d.id  AND e.id = #{id};
+	 
+	 	<!--    eid      last_name   gender      email          did  dept_name  
+				
+  				1001        Tom        m       tom@atguigu.com   1            开发部   -->
+	 </select>
+	 <resultMap type="com.atguigu.mybatis.beans.Employee" id="MyEmpDept">
+	 	<id column="eid" property="id"/>
+	 	<result column="last_name" property="lastName"/>
+	 	<result column="gender" property="gender"/>
+	 	<result column="email" property="email"/>
+	 	<!-- 使用级联的方式 
+		 	<result column="did" property="dept.id"/>
+		 	<result column="dept_name" property="dept.departmentName"/>
+	 	-->
+	 	<!-- 映射关联属性. -->
+	 	<association property="dept" javaType="com.atguigu.mybatis.beans.Department">
+	 		<id column="did" property="id"/>
+	 		<result column="dept_name" property="departmentName"/>
+	 	</association>
+	 </resultMap>
+	 
+	 <!-- 
+	 	使用association进行分步查询:
+	 		结果: Employee 包含 Department
+	 		过程:
+	 			1.先按照员工的id查询员工信息（d_id）
+	 			2.再通过d_id外键信息查询对应的部门信息
+	 			3.把查出的部门信息设置到员工中.
+	  -->
+	<!-- public Employee getEmpAndDeptStep(Integer id ); -->
+	<select id="getEmpAndDeptStep" resultMap="MyEmpAndDeptStep">
+		select * from tbl_employee where id = #{id}
+	</select>
+	<resultMap type="com.atguigu.mybatis.beans.Employee" id="MyEmpAndDeptStep">
+		<!-- 封装员工信息 -->
+		<id column="id" property="id"/>
+	 	<result column="last_name" property="lastName"/>
+	 	<result column="gender" property="gender"/>
+	 	<result column="email" property="email"/>
+	 	
+	 	<!-- 封装部门信息 -->
+	 	<association property="dept" javaType="com.atguigu.mybatis.beans.Department"
+	 		select="com.atguigu.mybatis.mapper.DepartmentMapper.getDeptById"
+	 		column="d_id"
+	 	>
+	 	</association>
+	</resultMap>
+	
+	<!-- 
+		分步查询的时候使用延迟加载:
+		结果: Employee 包含 Department
+		过程: 分步查询
+		期望: 每次查询Employee的时候 不要立即将Department查询出来，而是等到使用Department的时候再去查询对应的信息
+		
+		延迟加载:
+			在全局配置文件中的settings中开启两个配置:
+			<setting name="lazyLoadingEnabled" value="true"/>
+			<setting name="aggressiveLazyLoading" value="false"/>
+	 -->
+	 
+	 
+	 <!-- public List<Employee > getEmpsByDeptId(Integer id ); -->
+	 <select id="getEmpsByDeptId" resultType="com.atguigu.mybatis.beans.Employee">
+	 	select * from tbl_employee where d_id = #{id}
+	 </select>
+	 
+	
+</mapper>
