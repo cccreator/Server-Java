@@ -1,0 +1,43 @@
+MyBatis_day02
+
+MyBatis_day02
+一、select查询返回List/Map
+1.查询多条数据返回List
+  如果使用的是自动映射 ， resultType指定的是集合中元素的类型。或者说
+  理解为想让Mybatis将一条数据封装成哪种类型的java对象。就指定哪种类型
+2.查询返回Map 
+  a.查询一条数据返回Map,MyBatis会自动使用表的列名作为key,列值作为value返回.
+  b.查询多条数据返回Map,需要使用@MapKey("key")指定封装map的时候所使用的key
+    Map中的value就是 一条数据封装成的java对象
+二、resultMap 自定义映射
+a.
+ association  用来映射联合属性
+  
+	association可以使用分步查询
+ 
+ association使用分步查询可以使用延迟加载
+    
+b.
+  collection   用来映射集合类型的联合属性
+       
+ collection使用分步查询
+   
+ collection分步查询使用延迟加载
+  
+三、动态sql
+    if: 用于条件的判断. test中写的OGNL表达式.
+    where:用于解决拼装sql的时候where 以及 前面多出或者少and的问题.
+    trim: 用于解决拼装sql的时候前面或者后面 缺少或者多出某些字符的问题
+    set:  用于解决修改操作拼装sql的时候,的问题.
+    choose:类似于带了break的switch case语句.  when可以出现多次 otherwise出现一次.
+    foreach:主要用于对集合的遍历 .
+        使用foreach完成Mysql的批量操作.
+四、内置参数
+    a._parameter: 代表整个参数.
+	             如果是单个参数，则代表整个参数
+             如果是多个参数,MyBatis会封装map,_parameter代表封装后的map。
+    b._databaseId:
+                 如果配置了databaseIdProvider，_databaseId代表当前使用的数据库的别名.
+五、抽取可重用的sql
+    可以使用<sql id=""></sql> 将重复使用率高的sql语句抽取出来。方便多次使用.
+在使用的地方可以用<include refid=""> 来引用已经抽取好的sql.

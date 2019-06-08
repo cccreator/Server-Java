@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+	namespace: 命名空间. 
+			   如果不使用mapper接口开发，namespace可以随便写.
+			  如果使用的mapper接口开发， namespace必须制定成接口的全类名
+			 目的就是 将mapper接口与sql映射文件做绑定.
+			   
+ -->
+<mapper namespace="com.atguigu.mybatis.dao.EmployeeMapper">
+	
+	<!-- 
+		select: 配置查询的sql语句
+		   id:sql语句的唯一标识
+		   resultType:当前sql查询到的数据想让MyBatis封装的javaBean对象的类型.
+		   #{id}: 从传递过来的参数中取出id值.
+	 -->
+	<select id="selectEmployee" resultType="com.atguigu.mybatis.beans.Employee">
+		select id,last_name lastName,gender,email from tbl_employee where id = #{id}
+	</select>
+	<!-- public Employee getEmpById(Integer id ); -->
+	<!-- sql语句的id值指定成方法名。 目的是sql语句与方法进行绑定. -->
+	
+	<select id="getEmpById" resultType="com.atguigu.mybatis.beans.Employee" databaseId="mysql">
+		select id,last_name,gender,email from tbl_employee where id = #{id}
+	</select>
+	
+	
+	<select id="getEmpById"  resultType="com.atguigu.mybatis.beans.Employee" databaseId="oracle">
+		select id,last_name,gender,email from orcl_employee where id = #{id}
+	</select>
+	
+	
+	<!--  public void addEmp(Employee employe);
+		parameterType: 指定参数的类型, 可以省略不写的。
+		#{lastName}:从传入的Employee类型的参数中取出对应的值.
+	 -->
+	<!-- 对于支持自增主键的数据库，只需要设置两个属性即可:
+		useGeneratedKeys="true"
+		keyProperty="javaBean的属性"
+	 -->
+	<insert id="addEmp" 
+			parameterType="com.atguigu.mybatis.beans.Employee" 
+			databaseId="mysql"
+			useGeneratedKeys="true"
+			keyProperty="id">
+		insert into tbl_employee(last_name,gender,email) values(#{lastName},#{gender},#{email})
+	</insert>
+	
+	
+	<!-- 对于不支持主键自增的数据库，需要使用selectKey子标签来完成主键值得返回 
+		order: 
+			BEFORE: selectKey在 插入语句之前执行
+			AFTER:  selectKey在插入语句之后执行
+	     keyProperty: 将selectKey查到的主键值赋值给javaBean的那个属性
+	-->
+	
+	<!-- BEFORE 
+	<insert id="addEmp" 
+			parameterType="com.atguigu.mybatis.beans.Employee" 
+			databaseId="oracle">
+		<selectKey order="BEFORE" keyProperty="id" resultType="integer"> 
+			select employee_seq.nextval from dual 
+		</selectKey>
+		insert into orcl_employee(id,last_name,gender,email) values(#{id},#{lastName},#{gender},#{email})
+	</insert>
+	
+	-->
+	
+	<insert id="addEmp" 
+			parameterType="com.atguigu.mybatis.beans.Employee" 
+			databaseId="oracle">
+		<selectKey order="AFTER" keyProperty="id" resultType="integer"> 
+			select employee_seq.currval from dual 
+		</selectKey>
+		insert into orcl_employee(id,last_name,gender,email) values(employee_seq.nextval,#{lastName},#{gender},#{email})
+	</insert>
+	
+	
+	
+	
+	<!-- public void updateEmp(Employee employee); -->
+	<update id="updateEmp">
+		update tbl_employee set last_name = #{lastName}, gender = #{gender}, email=#{email}
+			where id = #{id}
+	</update>
+	
+	<!-- public void deleteEmp(Integer id ); -->
+	<delete id="deleteEmp" parameterType="int">
+		delete from tbl_employee where id = #{id}
+	</delete>
+	
+	
+	<!-- public Employee getEmpByIdAndLastName(Integer id , String lastName); -->
+	<select id="getEmpByIdAndLastName" resultType="com.atguigu.mybatis.beans.Employee">
+		select * from tbl_employee where id = #{param1} and last_name = #{param2}
+	</select>
+	
+	
+	<!-- public Employee getEmpByMap(Map<String,Object> map ); -->
+	<select id="getEmpByMap" resultType="com.atguigu.mybatis.beans.Employee">
+		select * from ${tableName} where id = ${aa} and last_name = '${bb}'
+	</select>
+	
+</mapper>

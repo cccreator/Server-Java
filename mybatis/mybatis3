@@ -1,0 +1,90 @@
+MyBatis_day03
+
+MyBatis_day03
+一、缓存机制
+    1.一级缓存
+      一级缓存（本地缓存） 
+	  	 SqlSession级别的缓存,本质上就是SqlSession级别的一个map。
+	       每一个SqlSession对象都自己的一级缓存.互不共享.
+	       一级缓存是默认开启的
+	      工作机制: 与数据库的一次会话期间（通过一个SqlSession,查询到的数据会放在一级缓存中.
+	               以后如果需要获取相同的数据,直接从缓存中获取,而不需要发送sql到数据库查询.
+	  一级缓存失效的情况:
+	  		1.SqlSession不同.     	
+	  		2.SqlSession相同,但是查询条件不同.  
+	  		3.SqlSession相同,但是在两次查询期间执行了增删改的操作.
+	  		4.SqlSession相同,手动清除了一级缓存.
+    2.二级缓存
+       二级缓存（全局缓存 基于namespace级别的缓存. 二级缓存默认是关闭的，必须手动配置开启.
+	  		工作机制:
+	 		1.一个会话(SqlSession)，查询一条数据,这个数据就会被放在当前会话的一级缓存中.
+	  		2.如果会话提交或者关闭,一级缓存中的数据会被保存到二级缓存中.
+	  	
+	  		使用步骤:
+	  		1.在全局配置文件中开启二级缓存:
+	  		   <setting name="cacheEnabled" value="true"/>
+	 		2.在想要使用二级缓存的sql映射文件中配置使用二级缓存:
+	 		   <cache></cache>
+	 		3.我们的POJO需要实现序列化接口.
+    3.缓存相关的设置
+	 1. cacheEnabled=false:关闭的是二级缓存,一级缓存依旧可以使用.
+	 2. 每一个select标签都useCache=true属性.
+	  	    如果useCache=false:  不使用二级缓存，依旧使用一级缓存.
+	 3. 每一个增删改标签都有flushCache=true属性:
+	  	   在两次查询期间做了增删改操作,一二级缓存都会清除.
+	    每一个查询标签都有flushCache=false,如果改为true,每次查询之后都会清除缓存，缓存是没被使用的.
+	 4.sqlSession.clearCache(): 只会清空当前session的一级缓存.
+	  
+	 5.localCacheScope:设置一级缓存(本地缓存)的作用域。
+	  		SESSION :会话期间
+	  	STATEMENT:  可以禁用一级缓存.
+4.整合第三方的缓存
+  1.导入Ehcache的jar包  以及适配包
+	  	  ehcache-core-2.6.8.jar
+		  mybatis-ehcache-1.0.3.jar
+             slf4j-api-1.6.1.jar
+             slf4j-log4j12-1.6.2.jar
+	 2.配置Ehcache的配置文件
+	     
+	 3.在映射文件中配置使用Ehcache
+	 	  <cache type="org.mybatis.caches.ehcache.EhcacheCache"></cache>
+	 
+二、逆向工程
+    1.导入需要的jar包
+    2.配置逆向工程需要的配置文件 mbg.xml
+    3.运行逆向工程代码.
+三、分页插件
+    1.导入需要的包
+    2.在全局配置文件中配置插件
+       <plugins>
+	  	<!-- 注册分页插件 -->
+	  	<plugin interceptor="com.github.pagehelper.PageInterceptor"></plugin>
+	  </plugins>
+    3.编码测试 ，使用分页插件
+      a.在查询之前设置分页信息   
+	   Page<Object> page = PageHelper.startPage(2,2);
+  b.在查询之后，将查到的结果设置到PageInfo中，获取更详细的分页信息
+    PageInfo<Employee> info = new PageInfo<Employee>(emps,5);
+四、SSM整合步骤:
+1.导入需要用到的jar包
+	  a.Spring相关的jar包
+   b.SpringMVC相关的jar包
+   c.MyBatis相关的jar包
+   d.连接池、数据库驱动、日志等
+   e.MyBatis与Spring的适配包
+2.MyBatis环境的搭建
+	  a.MyBatis的全局配置文件  mybatis-config.xml  保留一些MyBatis相关的设置,将连接、事务等迁移到Spring中.
+   b.JavaBean、Mapper接口、Sql映射文件.
+    3.Spring + SpringMVC环境的搭建
+	  a.web.xml中配置启动SpringIOC容器的监听器    以及  SpringMVC的前端控制器
+   b.Spring配置文件的编写  applicationContext.xml
+   c.SpringMVC配置文件的编写 springmvc.xml
+4.整合
+	  a.如何创建SqlSessionFactory进而能得到SqlSession
+   b.如何生成Mapper接口的代理实现类
+5.编码测试
+	  完成员工管理系统
+   a.页面显示员工列表
+   b.添加员工信息
+   c.修改员工信息77
+   d.删除员工信息
