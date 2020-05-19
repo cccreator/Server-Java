@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="false" scanPeriod="120 seconds">
+    <property name="APP_NAME" value="hiose"/>
+    <appender name="ErrorLoggerConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>error</level>
+        </filter>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss}, %p, %c, %t, %r, %ex, %F, %L, %C{1},
+                %M %m%n
+            </pattern>
+        </layout>
+    </appender>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss},[%t]%p, %C{1}.%M, %m%n</pattern>
+        </layout>
+    </appender>
+    <appender name="FILE" class="com.hisense.smartroad.logger.MyDailyFIleAppender">
+        <File>d:/log/2016-04-09/${APP_NAME}.log</File>
+        <append>true</append>
+        <rollingPolicy class="com.hisense.smartroad.logger.MyFixedWindowRollingPolicy">
+            <FileNamePattern>d:/log/2016-04-09/${APP_NAME}.%i.log.zip</FileNamePattern>
+            <MinIndex>1</MinIndex>
+            <MaxIndex>1000000</MaxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>100MB</MaxFileSize>
+        </triggeringPolicy>
+        <layout class="com.hisense.logging.layout.BackTracePatternLayout">
+            <pattern>%date [%thread] [%-5p] \(%-20c{3}:%L\) - %m%n</pattern>
+        </layout>
+        <encoder>
+            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <root>
+        <level value="info"/>
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <!--<appender-ref ref="DB"/>-->
+    </root>
+
+    <logger additivity="false" name="ErrorLogger">
+        <level value="error"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="ErrorLoggerConsoleAppender"/>
+    </logger>
+    <logger name="com.mchange">
+        <level value="WARN"/>
+    </logger>
+    <logger name="com.hisense">
+        <level value="DEBUG"/>
+    </logger>
+
+    <logger name="ch.qos">
+        <level value="WARN"/>
+    </logger>
+    <!-- third party loggers -->
+    <logger name="org.hibernate">
+        <level value="DEBUG"/>
+    </logger>
+    <logger name="org.springframework">
+        <level value="ERROR"/>
+    </logger>
+
+    <logger name="org.apache.commons">
+        <level value="ERROR"/>
+    </logger>
+    <logger name="org.apache.shiro">
+        <level value="INFO"/>
+    </logger>
+    <!-- show parameters for hibernate sql 专为 Hibernate 定制 -->
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicExtractor" level="DEBUG"/>
+    <logger name="org.hibernate.SQLQuery" level="DEBUG">
+        <appender-ref ref="FILE" />
+    </logger>
+    <logger name="org.hibernate.engine.QueryParameters" level="DEBUG"/>
+    <logger name="org.hibernate.engine.query.HQLQueryPlan" level="DEBUG"/>
+
+    <logger name="org.springframework.jdbc.core.StatementCreatorUtils"
+            additivity="false" level="TRACE">
+        <appender-ref ref="FILE" />
+    </logger>
+    <logger name="org.springframework.jdbc.core" additivity="true">
+        <level value="DEBUG" />
+        <appender-ref ref="FILE" />
+    </logger>
+    <logger name="java.sql.Connection" additivity="true">
+        <level value="DEBUG" />
+        <appender-ref ref="FILE" />
+    </logger>
+    <logger name="java.sql.Statement" additivity="true">
+        <level value="DEBUG" />
+        <appender-ref ref="FILE" />
+    </logger>
+    <logger name="java.sql.PreparedStatement" additivity="true">
+        <level value="DEBUG" />
+        <appender-ref ref="FILE" />
+    </logger>
+    <logger name="java.sql.ResultSet" additivity="true">
+        <level value="DEBUG" />
+        <appender-ref ref="FILE" />
+    </logger>
+</configuration>
